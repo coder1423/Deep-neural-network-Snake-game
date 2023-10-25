@@ -1,0 +1,16 @@
+.grid {
+  margin:0.2vw;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+.screen {
+  height: 49.4vw;
+  width: 49.4vw;
+  margin: 0.2vw;
+  background-color: rgb(50, 50, 50);
+}
+body {
+  margin:0vw;
+  background-color: rgb(27, 26, 26);
+  color: rgb(228, 226, 226);
+}
