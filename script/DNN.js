@@ -2,9 +2,10 @@ import "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js";
 
 const model_param = {
   layers: [
-    tf.layers.dense({inputShape: [1], units: 32, activation: 'relu'}),
+    tf.layers.dense({inputShape: 29, units: 32, activation: 'relu'}),
     tf.layers.dense({units: 32, activation: 'relu'}),
-    tf.layers.dense({units: 1}),
+    tf.layers.dense({units: 32, activation: 'relu'}),
+    tf.layers.dense({units: 4}),
   ]
 }
 const compile_param = {
@@ -13,36 +14,64 @@ const compile_param = {
 }
 const fitParam = {
   epochs: 100,
-  batchSize: 2,
+  batchSize: 1,
 }
 
-class DNN {
+class 데이터 {
+  #상태 = [];
+  #행동 = [];
+
+  #포인터 = 0;
+  #메모리크기 = 1000;
+
+  입력(상태, 행동) {
+    this.#상태[this.#포인터] = 상태;
+    let 임시 = [0,0,0,0];
+    임시[행동] = 1;
+    this.#행동[this.#포인터] = 임시;
+    
+    if (this.#포인터 >= this.#메모리크기) {
+      this.#메모리크기 = 0;
+    } else {
+      this.#메모리크기 += 1;
+    }
+  }
+
+  get 상태() {
+    return tf.tensor(this.#상태);
+  }
+  get 행동() {
+    return tf.tensor(this.#행동);
+  }
+}
+
+export class 모델 {
   constructor() {
-    this.#network = tf.sequential(model_param);
-    this.#network.compile(compile_param);
+    this.#model = tf.sequential(model_param);
+    this.#model.compile(compile_param);
   }
-  #network;
+  #model;
 
-  #replay_memory = [20,21,22,23,24,25];
+  데이터 = new 데이터();
 
-  get replay_tensor() {
-    return tf.tensor(this.#replay_memory);
+  async 학습() {
+    await this.#model.fit(this.데이터.상태, this.데이터.행동, fitParam);
+  }
+  async 행동반환(상태) {
+    return this.#model
+    .predict(tf
+      .tensor(상태).reshape([-1, 29]))
+    .reshape([-1])
+    .array()
+    .then(array=> {
+      return array.indexOf(Math.max(...array));
+    })
   }
 
-  learningModel() {
-    this.#network.fit(this.replay_tensor, this.target_value, fitParam).then(async ()=> {
-        this.#network.predict(시험).print();
-    });
+  async 저장() {
+    await this.#model.save('localstorage://model');
   }
-  async updateTargetNetwork() {
-    await this.#network.save('localstorage://my-model');
-    network = await tf.loadLayersModel('localstorage://my-model');
+  async 불러오기() {
+    this.#model = await tf.loadLayersModel('localstorage://model');
   }
 }
-
-
-
-const 시험 = tf.tensor([20,21,22,23,24,25]);
-
-const a = new DNN();
-a.learningModel();
